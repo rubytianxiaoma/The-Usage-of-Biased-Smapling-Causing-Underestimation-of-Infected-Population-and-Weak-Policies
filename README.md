@@ -10,7 +10,7 @@ The document contains total number of confirmed COVID-19 cases in Canada and Ita
 - r0.on.wa.csv The document contains reproduction number in Ontario, Canada (CCM, 2020) and Washington, U.S.(The COVID Tracking Project, 2020) at four time stages. Reproduction number for Ontario, Canada can be found at: https://covid-19.ontario.ca/data#where_numbers Reproduction number for Washington, U.S.can be found at: https://rt.live/us/WA
 
 R code folder contains all the code needed for building the report:
-- biased sampling.Rmd contains code build for the report paper,paper can be found in the repo locates at /Paper/Bidengo.pdf.
+- biased sampling.Rmd contains code build for the report paper,paper can be found in the repo locates at /Paper/biased sampling.pdf.
 
 Paper folder contains the pdf report using . Corresponding code script can be found in R code folder.
 - biased-sampling.pdf
