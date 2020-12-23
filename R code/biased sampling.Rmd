@@ -51,7 +51,7 @@ Dataset used for the report contains variables collected from various public sou
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 #Creating table for variables used in the model/as evidence adapted from various sources.
-selected_table <- data.frame(var = c('date',  'total cases','new cases','r','location', 'C(t)', 'C0','w0','s0'), describ = c('Date that the case was reported to the local public health unit(PHU)', 'Cumulative COVID-19 cases', 'Daily reported cases released by Public Health Ontario','Reproduction number: an estimate of the average number of people that 1 person will infect when they have COVID-19', 'location','the cumulative number of confirmed cases at time t in days','initial number of confirmed cases at the time when the count starts','citizen’s willingness to get tested once showing some levels of symptoms with 65.5%(60.5%-70.2%,with 95% CI)','the percentage of symptomatic infected population, equals to 0.7 in the model'))
+selected_table <- data.frame(var = c('date',  'total cases','new cases','r','location', 'C(t)', 'C0','w0','s0'), describ = c('Date that the case was reported to the local public health unit(PHU)', 'Cumulative COVID-19 cases', 'Daily reported cases released by Public Health Ontario','Reproduction number: an estimate of the average infections that a COVID patient results', 'location','the cumulative number of confirmed cases at time t in days','initial number of confirmed cases at the time when the count starts','citizen’s willingness to get tested(if symptoms developed)','the percentage of symptomatic infected population, equals to 0.7 in the model'))
 colnames(selected_table) <- c("Variables", "Description")
 kable(selected_table, caption="Variables used in the model/as evidence adapted from various sources") %>% 
   kable_styling(latex_options = "hold_position")
@@ -162,12 +162,12 @@ The purpose for the model is to understand the bias between actual infected popu
 At an early stage of the outbreak, new cases are directly proportional to the existing infected cases at the beginning of an infection chain, as a result, the cumulative cases grows exponentially.  It can be expressed as an exponential growth function(Please see data section for more details of why using such a function)
 
 Following is the exponential growth function: 
-$$C(t) = C_0r^t$$, 
-C(t) represents the cumulative number of confirmed cases at time t in days, where r is the number of people infected by each sick person, the growth factor, or the reproduction number. C0 is the initial number of confirmed cases at the time when the count starts. The exponential model provides an upper bound of future situations by assuming the outbreak continues to grow and follows the same pattern in the past. 
+$$C(r,t) = C_0r^t$$, 
+C(r,t) represents the cumulative number of confirmed cases at time t in days with reproduction number r. Where r is the number of people infected by each sick person, the growth factor, or the reproduction number. C0 is the initial number of confirmed cases at the time when the count starts. The exponential model provides an upper bound of future situations by assuming the outbreak continues to grow and follows the same pattern in the past. 
 However, the initial number of confirmed cases could be biased due to the citizens’ willingness to get tested and asymptomatic patients. We introduce a new term, w0, to indicate citizen’s willingness to get tested once they show symptoms. and s0 to indicate the ratio of symptomatic infected population. 
 Assume only patients developed some levels of symptoms with willingness to get tested went to test, the cumulative cases follows the exponential growth model.
-$$C(t)_r = (C_0/(w_0 * s_0))r^t$$,
-C(t)_r represents the cumulative number of confirmed cases at time t, where r is the growth rate. C0 is the initial number of confirmed cases at the time when the count starts, s0 indicates the percentage of symptomatic infected population, and w0 shows citizen’s willingness to get tested once showing some levels of symptoms. 
+$$C(r,t)_r = (C_0/(w_0 * s_0))r^t$$,
+C(r,t)_r represents the cumulative number of confirmed cases at time t, where r is the reproduction number, which can be interpreted as growth rate here. C0 is the initial number of confirmed cases at the time when the count starts, s0 indicates the percentage of symptomatic infected population, and w0 shows citizen’s willingness to get tested once showing some levels of symptoms. 
 
 In the following parts, two models were developed under different scenarios. The first model aims to show the actual daily infected cases with consideration of Ontario residents’ uncertain willingness to get tested using empirical data adapted from Public Health Ontario.  
 The second model aims to show the estimated actual infected population results from one hypothetical outbreak with overstates settings in 3 days with uncertain growth factor, r. 
@@ -179,13 +179,13 @@ To count for the uncertainty in a Monte Carlo simulation study, a simulation app
 As Monte Carlo simulation used for model 1generates a random sample of size 10 for each uncertain input variable of a model, then repeat 10000 times. It selects each point independently from the probability distribution for that input variable. 
 
 Empirical data shows 1924,1925 and 1676 confirmed cases on Dec 06 in Ontario[Public Health Ontario,2020], where t=0, w0 = 65.5%[CPSS,2020] and s0=70% [Joseph Workman, 2020]. Assume only symptomatic infected population(70% of total infected population) who are willing to get tested(65.5% of the 70% total infected population) went to test: The resulting actual infected population would be
-C(t)_r = (1924/(0.655* 0.7))
-C(t)_r = 4196.29226
+C(r,t)_r = (1924/(0.655* 0.7))
+C(r,t)_r = 4196.29226
 More than 4196 actual active infected cases rather than 1924 reported newly added cases on Dec 6th. The actual active infected cases for Dec 7th and 8th are 4199 and 3655 accordingly. 
-A Monte Carlo simulation model is used to create some randomness, so we may not get exactly 65.5% of symptomatic residents going to test every time. Rather than assuming exactly 65.5% of Ontario residents would get tested for the COVID-19 virus if they were to experience symptoms, each resident with symptoms has a 60.5% - 70.2% chance of getting tested. The chance is derived from the Canadian Perspectives Survey Series (Please see Data section for more details).
-At this time, the model eliminates r^t since t=0 when counting on a daily basis.The model is shown below:
+A Monte Carlo simulation model is used to create some randomness, so we may not get exactly 65.5% of symptomatic residents going to test every time. Rather than assuming exactly s = 65.5% of Ontario residents would get tested for the COVID-19 virus if they were to experience symptoms, each resident with symptoms has a 60.5% - 70.2% chance of getting tested. s follows a uniform distribution from 60.5% to 70.2% as a variable in the model. The chance is derived from the Canadian Perspectives Survey Series (Please see Data section for more details).
+At this time, the term r^t in the model equals to 1 since t=0 when counting on a daily basis.The model is shown below:
 
-$$C(t)_r = (C_0/(w * s_0))$$,
+$$C(s)_r = (C_0/(w * s))$$,
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -211,9 +211,9 @@ for (i in 1:N){
 
 ## Model 2: With overstate assumption: Resulting infection cases occur in just 1 day of confirmed cases.
 
-Assume the growth rate is ranging from 1.7-7.6. The model aims to see the cumulative infected population under uncertain R0. Assume 1000 hypothetical social gatherings were held at 5:00 P.M on Dec 6th with 10 attendees in each gathering, The observation period was 3 days. The COVID-19 spread process started from one person who was able to infect 1.7-7.6 people. The number of people being infected was modelled by an exponential growth function C(t) = r^t with parameter r, total number of people being infected could be different in different time stages of the observation period with varying r. 
+Assume the growth rate is ranging from 1.7-7.6. The model aims to see the cumulative infected population under uncertain R0. Assume 1000 hypothetical social gatherings were held at 5:00 P.M on Dec 6th with 10 attendees in each gathering, The observation period was 3 days. The COVID-19 spread process started from one person who was able to infect 1.7-7.6 people. The number of people being infected was modelled by an exponential growth function C(r,t) = C_0r^t with parameter r, total number of people being infected could be different in different time stages of the observation period with varying r. 
 
-the model becomes C(t) = r^t, cumulative number of confirmed cases at time t is directly related to the growth factor,r. Using the seed of my interest, I randomly assigned 10000 R0 values following an uniform distribution ranging from 1.7 to 7.6 for each day. I simulated 10000 times for each day with randomized r following an uniform distribution ranging from 1.7 to 7.6, to see the resulting infected population on that day.  I expected the average r to converge to 4.65 as the sample size approaches to infinite. Then we can use the exponential function to compute the value of C(t) for each value of t from 1 to 3, the resulting values for each simulation are estimated actual infected population in each trial at that time stage.
+the model becomes $$C(r,t) = C_0r^t$$, cumulative number of confirmed cases at time t is directly related to the growth factor,r. Using the seed of my interest, I randomly assigned 10000 r values following an uniform distribution ranging from 1.7 to 7.6 for each day. I simulated 10000 times for each day with randomized r following an uniform distribution ranging from 1.7 to 7.6, to see the resulting infected population on that day.  I expected the average r to converge to 4.65 as the sample size approaches to infinite. Then we can use the exponential function to compute the value of C(t) for each value of t from 1 to 3, the resulting values for each simulation are estimated actual infected population in each trial at that time stage.
 
 Assume that a minimum of one day is needed for a newly infected person to start transmitting the COVID-19 to the next generation of infected people. The infection times are independent of each other so that more than one person could be infected from the same infection active person on the same day. The simulation model was implemented in R and the r code can be found through github.
 
@@ -362,6 +362,8 @@ Martin Haugh(2017). MCMC and Bayesian Modeling. Retrieved from http://www.columb
 M. D. Mckay, R. J. Beckman, W. J. Conover. A Comparison of Three Methods for Selecting Values of Input Variables in the Analysis of Output from a Computer CodeTechnometrics, Vol. 42, No. 1, Special 40th Anniversary Issue (Feb., 2000), pp. 55-61 Retrieved from : http://www.jstor.org/stable/1271432 
 
 Nishiura H, Kobayashi T, Suzuki A, Jung S-Mok, Hayashi K, Kinoshita R, Yang Y, Yuan B, Akhmetzhanov AR, Linton NM and Miyama T. 2020. "Estimation of the asymptomatic ratio of novel coronavirus infections (COVID-19)." International Journal of Infectious Diseases.
+
+Public Health Ontario (2020). "COVID-19: Epidemiologic Summaries from Public Health Ontario.” Retrived from: covid-19.ontario.ca/covid-19-epidemiologic-summaries-public-health-ontario. 
 
 R Core Team (2020). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
 
